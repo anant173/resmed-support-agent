@@ -43,7 +43,7 @@ def print_event(event):
     if message:
         if isinstance(message, list):
             message = message[-1]
-        # message.pretty_print()  # Commented out as pretty_print requires a dependency
+        message.pretty_print()  # Commented out as pretty_print requires a dependency
 
 
 @workflow(name="resmed-support-agent")
@@ -54,7 +54,7 @@ async def run_agent(thread_id: str, user_input: str):
     events = []
     # Async stream execution of the agent
     async for event in AGENT.astream(inputs, config=config, stream_mode="values"):
-        # print_event(event) # Uncomment to see trace logs
+        print_event(event) # Uncomment to see trace logs
         events.append(event)
 
     response = await get_ai_response(events)

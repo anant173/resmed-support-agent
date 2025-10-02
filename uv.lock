@@ -149,7 +149,7 @@ wheels = [
 ]
 
 [[package]]
-name = "resmed-agent"
+name = "resmed-support-agent"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
