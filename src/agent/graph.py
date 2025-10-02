@@ -3,11 +3,31 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from src.agent.device_tools import tools
 from src.agent.llm import llm
-from src.agent.prompt import prompt_template
 from traceloop.sdk.decorators import task, workflow
 
 # 1. Initialize State/Memory
 memory = MemorySaver()
+
+#Define prompt template
+prompt_template = ChatPromptTemplate.from_messages(
+    [
+        SystemMessagePromptTemplate.from_template(
+            """
+    You are a **Certified Sleep Therapist and ResMed Device Support Agent**. Your primary goal is to 
+    help users troubleshoot their CPAP devices, check their usage compliance, and provide accurate, 
+    medically compliant information.
+
+    RULES:
+    1. **Prioritize Safety:** Do not recommend any changes to therapy pressure (settings) unless explicitly 
+       instructed by a doctor or in a clear troubleshooting step (e.g., pressure check).
+    2. **Use Data First:** Always use your tools to check **device usage data** (leak rate, compliance) 
+       before giving general advice, as the problem is often device-specific.
+    3. **Be Empathetic:** Maintain a professional, reassuring, and empathetic tone.
+    """
+        ),
+        MessagesPlaceholder(variable_name="messages", optional=True),
+    ]
+)
 
 # 2. Compile the ReAct Agent
 AGENT = create_react_agent(model=llm, tools=tools, state_modifier=prompt_template, checkpointer=memory)
@@ -15,6 +35,7 @@ AGENT = create_react_agent(model=llm, tools=tools, state_modifier=prompt_templat
 
 @task()
 async def get_ai_response(events):
+    # ... (Unchanged logic to extract the final AIMessage with no tool_calls)
     for event in reversed(events):
         if event.get("messages"):
             last_message = event["messages"][-1]
@@ -37,11 +58,12 @@ async def get_ai_response(events):
 
 
 def print_event(event):
+    # ... (Unchanged debug print logic)
     message = event.get("messages", [])
     if message:
         if isinstance(message, list):
             message = message[-1]
-        message.pretty_print()
+        message.pretty_print()  # Commented out as pretty_print requires a dependency
 
 
 @workflow(name="resmed-support-agent")
@@ -52,7 +74,7 @@ async def run_agent(thread_id: str, user_input: str):
     events = []
     # Async stream execution of the agent
     async for event in AGENT.astream(inputs, config=config, stream_mode="values"):
-        print_event(event) 
+        print_event(event) # Uncomment to see trace logs
         events.append(event)
 
     response = await get_ai_response(events)
