@@ -1,10 +1,12 @@
+"""ResMed Support Agent - LangGraph implementation with ReAct agent."""
 from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
+from traceloop.sdk.decorators import task, workflow
+
 from src.agent.device_tools import tools
 from src.agent.llm import llm
 from src.agent.prompt import prompt_template
-from traceloop.sdk.decorators import task, workflow
 
 # 1. Initialize State/Memory
 memory = MemorySaver()
@@ -17,6 +19,7 @@ AGENT = create_react_agent(
 
 @task()
 async def get_ai_response(events):
+    """Extract the final AI response from agent events."""
     for event in reversed(events):
         if event.get("messages"):
             last_message = event["messages"][-1]
@@ -26,11 +29,10 @@ async def get_ai_response(events):
                     # Simplified content handling (keeping it robust)
                     if isinstance(content, str):
                         return content
-                    elif isinstance(content, list):
+                    if isinstance(content, list):
                         # Assuming a flat list of items for simplicity
                         return " ".join([str(item) for item in content])
-                    else:
-                        return str(content)
+                    return str(content)
                 except Exception as e:
                     print(f"Error extracting response: {e}")
                     return "An error occurred while processing the response."
@@ -39,6 +41,7 @@ async def get_ai_response(events):
 
 
 def print_event(event):
+    """Print debug information for agent events."""
     message = event.get("messages", [])
     if message:
         if isinstance(message, list):
@@ -48,6 +51,7 @@ def print_event(event):
 
 @workflow(name="resmed-support-agent")
 async def run_agent(thread_id: str, user_input: str):
+    """Run the ResMed support agent with user input and return response."""
     config = {"configurable": {"thread_id": thread_id}}
     inputs = {"messages": [("user", user_input)]}
 

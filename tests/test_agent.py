@@ -1,18 +1,16 @@
+"""Unit and integration tests for ResMed Support Agent."""
+from unittest.mock import patch
 import pytest
-import asyncio
-from unittest.mock import patch, AsyncMock
+from langchain_core.messages import AIMessage
 
-# --- Production Imports ---
-# We import the actual logic objects and the main agent flow.
 from src.agent.device_tools import USER_DEVICES
 from src.agent.graph import run_agent
-from langchain_core.messages import AIMessage
 
 # --- Unit Tests for Logic (Testing Pure Python Methods) ---
 @pytest.mark.asyncio
 async def test_list_available_devices_returns_correct_models():
     """Verifies the core data retrieval logic."""
-    devices = await USER_DEVICES.get_all_device_models() 
+    devices = await USER_DEVICES.get_all_device_models()
     assert "AirSense 10" in devices
     assert "AirMini" in devices
 
@@ -22,7 +20,7 @@ async def test_check_compliance_compliant_case():
     result = await USER_DEVICES.check_compliance("AirSense 10")
     assert result['compliant'] is True
     assert 'usage' in result
-    assert result['leak_rate'] == "15.2 L/min" 
+    assert result['leak_rate'] == "15.2 L/min"
 
 
 @pytest.mark.asyncio
@@ -31,7 +29,7 @@ async def test_check_compliance_non_compliant_case():
     result = await USER_DEVICES.check_compliance("AirMini")
     assert result['compliant'] is False
     assert 'usage' in result
-    assert result['leak_rate'] == "30.1 L/min" 
+    assert result['leak_rate'] == "30.1 L/min"
 
 @pytest.mark.asyncio
 async def test_get_metrics_by_model_raises_value_error():
@@ -44,11 +42,11 @@ async def test_get_metrics_by_model_raises_value_error():
 
 @pytest.mark.asyncio
 @patch('src.agent.llm.ChatOpenAI.ainvoke')
-async def test_agent_uses_compliance_tool(mock_llm_acall): 
-    # The test verifies this specific flow: MOCK 1 (Tool Call)→REAL Tool Run→MOCK 2 (Final Answer)
-    
+async def test_agent_uses_compliance_tool(mock_llm_acall):
+    """Test that the agent correctly uses the compliance tool and returns expected response."""
+
     test_thread_id = "integration_test_1"
-    
+
     # --- MOCK RESPONSES ---
     # 1. MOCK RESPONSE: Tool Call (The Agent's First Thought)
     tool_call_response = AIMessage(
@@ -61,7 +59,7 @@ async def test_agent_uses_compliance_tool(mock_llm_acall):
             }
         ]
     )
-    
+
     # 2. MOCK RESPONSE: Final Answer (The Agent's Second Thought)
     # This must synthesize the tool output into a final string.
     final_answer_text = "Your compliance status for the AirSense 10 is **COMPLIANT**. You used the device for 32.5 hours last week, which is great!"
@@ -79,13 +77,13 @@ async def test_agent_uses_compliance_tool(mock_llm_acall):
     # 3. EXECUTE & ASSERT
     user_input = "Can you check the compliance status for my AirSense 10?"
     response = await run_agent(thread_id=test_thread_id, user_input=user_input)
-    
+
     final_response_text = response['response']
-    
+
     # Assertions now check against the final synthesized text
     assert "COMPLIANT" in final_response_text
-    assert "32.5 hours" in final_response_text 
+    assert "32.5 hours" in final_response_text
     assert final_response_text.startswith("Your compliance status")
-    
+
     # Verify the LLM was called exactly twice
     assert mock_llm_acall.call_count == 2

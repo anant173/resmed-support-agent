@@ -1,3 +1,4 @@
+"""FastAPI backend for ResMed Support Agent."""
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,10 +25,12 @@ app.add_middleware(
 
 @app.get("/health-check")
 def status():
+    """Health check endpoint to verify service status."""
     return JSONResponse(content={"status": "OK"})
 
 
 class UserInput(BaseModel):
+    """Request model for user input to the agent."""
     thread_id: str
     user_input: str
 
