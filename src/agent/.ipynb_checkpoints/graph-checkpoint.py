@@ -15,6 +15,7 @@ AGENT = create_react_agent(model=llm, tools=tools, state_modifier=prompt_templat
 
 @task()
 async def get_ai_response(events):
+    # ... (Unchanged logic to extract the final AIMessage with no tool_calls)
     for event in reversed(events):
         if event.get("messages"):
             last_message = event["messages"][-1]
@@ -37,11 +38,12 @@ async def get_ai_response(events):
 
 
 def print_event(event):
+    # ... (Unchanged debug print logic)
     message = event.get("messages", [])
     if message:
         if isinstance(message, list):
             message = message[-1]
-        message.pretty_print()
+        message.pretty_print()  # Commented out as pretty_print requires a dependency
 
 
 @workflow(name="resmed-support-agent")
@@ -52,7 +54,7 @@ async def run_agent(thread_id: str, user_input: str):
     events = []
     # Async stream execution of the agent
     async for event in AGENT.astream(inputs, config=config, stream_mode="values"):
-        print_event(event) 
+        print_event(event) # Uncomment to see trace logs
         events.append(event)
 
     response = await get_ai_response(events)
