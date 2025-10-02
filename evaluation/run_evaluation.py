@@ -81,15 +81,15 @@ async def evaluate_agent(scenario: Dict[str, Any]) -> EvaluationResult:
         # Check if all required keywords are present in the final answer
         expected_keywords = scenario['expected_answer_keywords']
         
-        matched_keywords = [
+        missing_keywords = [
             kw for kw in expected_keywords 
-            if kw.lower() in final_response_text.lower()
+            if kw.lower() not in final_response_text.lower()
         ]
         
-        if matched_keywords:
-            return EvaluationResult(scenario_id, True, "SUCCESS: Matching keywords found.", final_response_text)
+        if not missing_keywords:
+            return EvaluationResult(scenario_id, True, "SUCCESS: All keywords found.", final_response_text)
         else:
-            return EvaluationResult(scenario_id, False, f"Faithfulness FAILED: All keywords missing.", final_response_text)
+            return EvaluationResult(scenario_id, False, f"Faithfulness FAILED: Keywords missing: {missing_keywords}", final_response_text)
             
     # Default success for general chat that passes safety
     return EvaluationResult(scenario_id, True, "SUCCESS: General chat handled.", final_response_text)
