@@ -41,6 +41,6 @@ These metrics cover the technical performance, efficiency, and faithfulness of t
 
 ### Running Evaluation Workflows
 
-To implement these metrics systematically (Module 11.6), you would create an evaluation pipeline (e.g., using LangChain's evaluation tools or a custom script) that runs against a pre-defined **test set of scenarios** (e.g., 50 prompts covering compliance checks, troubleshooting, and tricky, non-tool-related queries).
+To implement these metrics systematically, you would create an evaluation pipeline (e.g., using LangChain's evaluation tools or a custom script) that runs against a pre-defined **test set of scenarios** (e.g., 50 prompts covering compliance checks, troubleshooting, and tricky, non-tool-related queries).
 
 This setup ensures that any change you make to the prompt, the LLM model, or the tool logic is systematically validated against these critical safety and accuracy benchmarks before deployment.

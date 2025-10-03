@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage
 from src.agent.device_tools import USER_DEVICES
 from src.agent.graph import run_agent
 
-# --- Unit Tests for Logic (Testing Pure Python Methods) ---
+# --- Unit Tests for Tools (Testing Pure Python Methods) ---
 @pytest.mark.asyncio
 async def test_list_available_devices_returns_correct_models():
     """Verifies the core data retrieval logic."""
@@ -38,7 +38,7 @@ async def test_get_metrics_by_model_raises_value_error():
         # Test the core retrieval method for the error
         await USER_DEVICES.get_metrics_by_model("DreamStation")
 
-# --- Integration Test: Full Agent Flow with Assertions ---
+# --- Integration Test: Full Agent Orchestration Flow (with Assertions) ---
 
 @pytest.mark.asyncio
 @patch('src.agent.llm.ChatOpenAI.ainvoke')
@@ -62,7 +62,10 @@ async def test_agent_uses_compliance_tool(mock_llm_acall):
 
     # 2. MOCK RESPONSE: Final Answer (The Agent's Second Thought)
     # This must synthesize the tool output into a final string.
-    final_answer_text = "Your compliance status for the AirSense 10 is **COMPLIANT**. You used the device for 32.5 hours last week, which is great!"
+    final_answer_text = (
+        "Your compliance status for the AirSense 10 is **COMPLIANT**. "
+        "You used the device for 32.5 hours last week, which is great!"
+    )
     final_answer_response = AIMessage(
         content=final_answer_text,
         tool_calls=[] # Important: No tool calls here
