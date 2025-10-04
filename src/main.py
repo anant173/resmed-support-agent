@@ -1,9 +1,13 @@
 """FastAPI backend for ResMed Support Agent."""
 import os
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 # Import the new run_agent function
 from src.agent.graph import run_agent
 
