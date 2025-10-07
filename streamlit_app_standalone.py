@@ -1,16 +1,9 @@
 """ResMed Sleep Therapist Agent - Streamlit Web Interface."""
-from dotenv import load_dotenv
 import asyncio
 import uuid
-import os
 import streamlit as st
-import httpx
-
-# --- Configuration ---
-#Load environment variables
-load_dotenv()
-# Read the internal network URL (e.g., http://fastapi-agent:8000 provided by Docker Compose when testing locally)
-API_URL = os.getenv("AGENT_API_URL")
+# Import the run_agent function from the new project structure
+from src.agent.graph import run_agent
 
 # Note: The location of this function might change in future Streamlit versions.
 # We keep it here to detect direct run vs. 'streamlit run'
@@ -52,40 +45,19 @@ def initialize_session_state():
 
 
 async def process_input(user_input):
-    """
-    Handles user input, calls the async FastAPI endpoint, and updates the chat UI.
-    """
+    """Handles user input, calls the async agent, and updates the chat UI."""
     # Add user message to the chat history
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    #Get assistant response via HTTP POST request
+    # Get assistant response
     with st.chat_message("assistant"):
         with st.spinner("Consulting device metrics and clinical guidelines..."):
-            #Replace local function call with HTTP request
-            try:
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    http_response = await client.post(
-                        f"{API_URL}/run_agent",
-                        json={
-                            "thread_id": st.session_state.thread_id,
-                            "user_input": user_input
-                        }
-                    )
-                    http_response.raise_for_status() # Raise exception for 4xx/5xx errors
-                    response_data = http_response.json()
-
-            except httpx.HTTPStatusError as e:
-                error_detail = e.response.json().get('detail', 'Unknown error')
-                error_message = f"API Error: {e.response.status_code} - {error_detail}"
-                response_data = {"response": error_message}
-            except Exception as e:
-                error_message = f"Network Error: Could not connect to agent at {API_URL}"
-                response_data = {"response": error_message}
-            # --- END CRITICAL CHANGE ---
+            # AWAIT the asynchronous run_agent function
+            response = await run_agent(st.session_state.thread_id, user_input)
 
             # Extract and display the final response
-            if response_data and response_data.get("response"):
-                assistant_response = response_data["response"]
+            if response and response.get("response"):
+                assistant_response = response["response"]
                 st.write(assistant_response)
                 # Save the assistant's response to the chat history
                 st.session_state.messages.append({"role": "assistant",
@@ -96,7 +68,6 @@ async def process_input(user_input):
                     "role": "assistant",
                     "content": "I'm sorry, I couldn't process that request."
                 })
-
 
 # --- Application Setup (UI Rendering) ---
 
@@ -109,7 +80,6 @@ st.title("💤 ResMed Sleep Therapist Agent")
 
 # Sidebar for suggestions and file upload
 with st.sidebar:
-
     st.header("Quick Questions")
     for question in SUGGESTED_QUESTIONS:
         # Use asyncio.run since Streamlit's context is synchronous

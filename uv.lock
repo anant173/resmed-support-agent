@@ -2839,6 +2839,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "jupyter" },
     { name = "langchain-openai" },
     { name = "langgraph" },
@@ -2858,6 +2859,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115.8" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "langchain-openai", specifier = ">=0.3.6" },
     { name = "langgraph", specifier = ">=0.2.73" },
